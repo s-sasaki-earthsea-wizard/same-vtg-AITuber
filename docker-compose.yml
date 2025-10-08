@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  aituber:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: same-vtg-aituber
+    env_file:
+      - .env
+    volumes:
+      # アプリケーションコードをマウント（開発時のホットリロード用）
+      - ./app:/app
+    network_mode: host  # ホストのVOICEVOXとOBSに接続するため
+    devices:
+      # 音声デバイスへのアクセス
+      - /dev/snd:/dev/snd
+    restart: unless-stopped
+    stdin_open: true
+    tty: true

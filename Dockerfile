@@ -4,18 +4,22 @@ FROM python:3.13.0-slim
 # 作業ディレクトリを指定
 WORKDIR /app
 
+# システム依存パッケージのインストール（音声処理に必要）
+RUN apt-get update && apt-get install -y \
+    libsndfile1 \
+    portaudio19-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # 必要なライブラリをrequirements.txtからインストール
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# コードコピー
-# 今回はすべてのファイルをコピーすることにする、本来は必要なファイルだけコピーすべき
-COPY . .
+# アプリケーションコードをコピー
+# appディレクトリの内容を/app配下にコピー
+COPY app/ /app/
 
-# TODO(これから何をするか？):
-# 認証情報やAPIキーなどをDockerコンテナに渡す
-# GitHubのリポジトリに認証キーなどのセンシティブな情報をpushしないように注意！
-# いくつかの方法があり得るので、調べてみてください
+# Pythonパスを設定
+ENV PYTHONPATH=/app/src
 
-# コマンドを実行、今回はシェルを実行することにする
-CMD ["/bin/bash"]
+# デフォルトコマンド: AITuberシステムを起動
+CMD ["python", "src/live/AITuberSystem.py"]
