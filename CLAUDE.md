@@ -19,25 +19,95 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 
 ```
 .
-├── src/
-│   ├── api/              # OpenAI API連携
-│   └── live/             # YouTube配信関連機能
-│       ├── AITuberSystem.py        # メインシステム
-│       ├── OBSAdapter.py           # OBS制御
-│       ├── VoiceMaker.py           # 音声合成
-│       ├── PlaySound.py            # 音声再生
-│       ├── talker.py               # 発話制御
-│       └── youtube_comment_adapter.py  # コメント取得
-├── docs/
-│   ├── aituber_system_prompt.txt   # システムプロンプト
-│   └── Character setting           # キャラクター設定
+├── app/                  # アプリケーションディレクトリ（Docker内にマウント）
+│   ├── src/
+│   │   ├── api/              # OpenAI API連携
+│   │   │   └── openai_adapter.py
+│   │   └── live/             # YouTube配信関連機能
+│   │       ├── AITuberSystem.py        # メインシステム
+│   │       ├── OBSAdapter.py           # OBS制御
+│   │       ├── VoiceMaker.py           # 音声合成
+│   │       ├── PlaySound.py            # 音声再生
+│   │       ├── talker.py               # 発話制御
+│   │       └── youtube_comment_adapter.py  # コメント取得
+│   └── docs/
+│       ├── aituber_system_prompt.txt   # システムプロンプト
+│       └── Character setting           # キャラクター設定
 ├── Dockerfile            # Docker環境定義
+├── docker-compose.yml    # Docker Compose設定
 ├── requirements.txt      # Python依存パッケージ
-└── .env.example         # 環境変数テンプレート
-
+├── .env.example         # 環境変数テンプレート
+└── .dockerignore        # Dockerビルド除外設定
 ```
 
+## Docker環境
+
+### 前提条件
+
+以下がホスト環境で起動している必要があります:
+
+- **VOICEVOX**: `localhost:50021`でアクセス可能
+- **OBS Studio**: WebSocketプラグインが有効（デフォルト: `localhost:4455`）
+
+### 実行方法
+
+1. 環境変数の設定
+```bash
+cp .env.example .env
+# .envファイルを編集
+```
+
+2. Docker Composeでビルド・起動
+```bash
+docker compose up --build
+```
+
+3. 開発時（ホットリロード有効）
+```bash
+docker compose up
+```
+
+### ネットワーク構成
+
+- `network_mode: host`を使用してホストネットワークに接続
+- これによりコンテナから`localhost`でVOICEVOXとOBSにアクセス可能
+
+## Makefile
+
+プロジェクトには便利なMakeコマンドが用意されています:
+
+```bash
+# ヘルプを表示
+make help
+
+# 環境変数をセットアップ
+make env-setup
+
+# Docker Composeで起動
+make up
+
+# ログを表示
+make logs
+
+# コンテナ内でシェルを起動
+make shell
+```
+
+より詳細なヘルプが必要な場合は、`makefiles/helps/` ディレクトリにヘルプファイルを追加できます。
+
 ## 開発履歴
+
+### 2025-10-08: Makefile追加
+- Docker操作用のMakeターゲットを追加
+- `makefiles/`ディレクトリに詳細ヘルプを追加
+- 環境変数セットアップコマンドを追加
+
+### 2025-10-08: Docker環境構築
+- `app/`ディレクトリを作成し、`src/`と`docs/`を配下に移動
+- `docker-compose.yml`を作成
+- Dockerfileを音声処理対応に更新
+- `.env.example`をYouTube配信用に簡素化
+- `.dockerignore`を追加
 
 ### 2025-10-08: プロジェクト初期化
 - フォーク元からYouTube配信機能以外を削除
@@ -50,7 +120,16 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 
 ## 言語設定
 
-このプロジェクトでは**日本語**での応答を行ってください。コード内のコメント、ログメッセージ、エラーメッセージ、ドキュメンテーション文字列なども日本語で記述してください。
+### ドキュメント・会話
+- プロジェクトドキュメント（README.md、CLAUDE.mdなど）: **日本語**
+- Claudeとの会話: **日本語**
+
+### コード
+- **Pythonコード内のコメント**: **英語**
+- **Makefile内のコメント**: **英語**
+- **ログメッセージ**: **英語**
+- **エラーメッセージ**: **英語**
+- **Docstring**: **英語**（Google Style）
 
 ## 開発ルール
 
@@ -60,7 +139,8 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 - 関数名: snake_case
 - クラス名: PascalCase
 - 定数: UPPER_SNAKE_CASE
-- Docstring: Google Style
+- Docstring: Google Style（英語で記述）
+- コメント: 英語で記述
 
 ## Git運用
 
