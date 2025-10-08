@@ -34,7 +34,7 @@ class AItuberSystem:
                 self.last_talk = talk  # 発言を保存
                 talk_list = self.split_text(talk)
                 for talk in talk_list:
-                    voice: VoiceIO = self.voice_maker.make_voice_voicevox(talk)
+                    voice: VoiceIO = self.voice_maker.make_voice_tts(talk)
                     self.obs_adapter.set_question("")
                     self.obs_adapter.set_answer(talk)
                     self.play_sound.play_sound(voice)
@@ -43,7 +43,7 @@ class AItuberSystem:
                 self.last_talk = character_speak  # 発言を保存
                 speak_list = self.split_text(character_speak)
                 for speak in speak_list:
-                    voice: VoiceIO = self.voice_maker.make_voice_voicevox(speak)
+                    voice: VoiceIO = self.voice_maker.make_voice_tts(speak)
                     self.obs_adapter.set_question(comment)
                     self.obs_adapter.set_answer(speak)
                     self.play_sound.play_sound(voice)

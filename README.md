@@ -10,7 +10,7 @@ LLMの応答と合成音声を使用して、YouTubeライブ配信でコメン�
 
 - YouTube配信でのコメント取得と自動応答
 - OpenAI APIを使用した自然な会話生成
-- VOICEVOXによる音声合成
+- OpenAI TTSによる音声合成
 - OBSを使用した配信制御
 
 ## 技術スタック
@@ -18,7 +18,7 @@ LLMの応答と合成音声を使用して、YouTubeライブ配信でコメン�
 - **言語**: Python 3.13.0
 - **実行環境**: Docker
 - **LLM**: OpenAI API
-- **音声合成**: VOICEVOX
+- **音声合成**: OpenAI TTS
 - **配信制御**: OBS (OBS WebSocket)
 - **配信プラットフォーム**: YouTube Live
 
@@ -26,7 +26,6 @@ LLMの応答と合成音声を使用して、YouTubeライブ配信でコメン�
 
 ### 1. 外部サービスのセットアップ
 
-- **VOICEVOX**: ローカル環境で起動しておく必要があります
 - **OBS Studio**: OBS WebSocketプラグインを有効化
 - **YouTube**: ライブ配信を開始し、VideoIDを取得
 
@@ -44,15 +43,12 @@ LLMの応答と合成音声を使用して、YouTubeライブ配信でコメン�
 
 以下をホスト環境で事前に起動してください:
 
-1. **VOICEVOX**
-   - デフォルトポート `localhost:50021` で起動
-
-2. **OBS Studio**
+1. **OBS Studio**
    - OBS WebSocketプラグインを有効化
    - デフォルトポート `localhost:4455`
    - WebSocketパスワードを設定
 
-3. **YouTube配信**
+2. **YouTube配信**
    - ライブ配信を開始し、VideoIDを取得
 
 ### Docker Compose環境での実行（推奨）
@@ -151,7 +147,7 @@ YOUTUBE_VIDEO_ID="your-youtube-video-id"
 
 ## 注意事項
 
-- `AITuberSystem.py`を実行する前に、OBSとVOICEVOXの両方を起動しておく必要があります
+- `AITuberSystem.py`を実行する前に、OBS Studioを起動しておく必要があります
 - YouTube配信のVideoIDは配信ごとに変更する必要があります
 - キャラクター設定のカスタマイズは、LLMに手伝ってもらうことを推奨します
 
@@ -161,6 +157,9 @@ YOUTUBE_VIDEO_ID="your-youtube-video-id"
 
 ## 開発履歴
 
+- **2025-10-09**: OpenAI TTSへ切り替え
+  - 音声合成をVOICEVOXからOpenAI TTSに変更
+  - VOICEVOXのセットアップが不要になり、環境構築を簡素化
 - **2025-10-08**: Makefile追加
   - Docker操作用のMakeターゲットを追加
   - `makefiles/`ディレクトリに詳細ヘルプを追加

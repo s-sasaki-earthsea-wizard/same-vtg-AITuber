@@ -11,7 +11,7 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 - **言語**: Python 3.13.0
 - **実行環境**: Docker
 - **LLM**: OpenAI API
-- **音声合成**: VOICEVOX
+- **音声合成**: OpenAI TTS (プロトタイプ段階、将来的に他のTTSエンジンへの切り替えを検討)
 - **配信制御**: OBS (OBS WebSocket)
 - **配信プラットフォーム**: YouTube Live
 
@@ -46,8 +46,9 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 
 以下がホスト環境で起動している必要があります:
 
-- **VOICEVOX**: `localhost:50021`でアクセス可能
 - **OBS Studio**: WebSocketプラグインが有効（デフォルト: `localhost:4455`）
+
+音声合成はOpenAI TTSを使用するため、VOICEVOXのセットアップは不要です。
 
 ### 実行方法
 
@@ -70,7 +71,7 @@ docker compose up
 ### ネットワーク構成
 
 - `network_mode: host`を使用してホストネットワークに接続
-- これによりコンテナから`localhost`でVOICEVOXとOBSにアクセス可能
+- これによりコンテナから`localhost`でOBSにアクセス可能
 
 ## Makefile
 
@@ -96,6 +97,12 @@ make shell
 より詳細なヘルプが必要な場合は、`makefiles/helps/` ディレクトリにヘルプファイルを追加できます。
 
 ## 開発履歴
+
+### 2025-10-09: OpenAI TTSへ切り替え
+- 音声合成をVOICEVOXからOpenAI TTSに変更
+- `VoiceMaker.make_voice_tts()`メソッドを追加（将来的なTTSエンジン切り替えに対応）
+- VOICEVOXのセットアップが不要になり、環境構築を簡素化
+- プロトタイプ段階として実装、将来的に他のTTSエンジン（にじボイス、Style-Bert-VITS2等）への切り替えを検討
 
 ### 2025-10-08: Makefile追加
 - Docker操作用のMakeターゲットを追加

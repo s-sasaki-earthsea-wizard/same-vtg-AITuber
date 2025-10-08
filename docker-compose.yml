@@ -9,11 +9,11 @@ services:
     env_file:
       - .env
     volumes:
-      # アプリケーションコードをマウント（開発時のホットリロード用）
+      # Mount application code for hot-reload during development
       - ./app:/app
-    network_mode: host  # ホストのVOICEVOXとOBSに接続するため
+    network_mode: host  # Connect to OBS on host (VOICEVOX no longer required)
     devices:
-      # 音声デバイスへのアクセス
+      # Access to audio device for sound output
       - /dev/snd:/dev/snd
     restart: unless-stopped
     stdin_open: true
