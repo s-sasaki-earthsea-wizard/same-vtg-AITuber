@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  aituber:
+  same-vtg-aituber:
     build:
       context: .
       dockerfile: Dockerfile

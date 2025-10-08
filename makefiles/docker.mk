@@ -22,7 +22,7 @@ docker-logs:  ## Show Docker Compose logs
 	docker compose logs -f
 
 docker-shell:  ## Open shell in container
-	docker compose exec aituber /bin/bash
+	docker compose exec $(SERVICE_NAME) /bin/bash
 
 ## Docker Image Management
 docker-build:  ## Build Docker image

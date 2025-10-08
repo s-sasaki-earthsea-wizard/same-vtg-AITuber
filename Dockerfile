@@ -21,5 +21,5 @@ COPY app/ /app/
 # Pythonパスを設定
 ENV PYTHONPATH=/app/src
 
-# デフォルトコマンド: AITuberシステムを起動
-CMD ["python", "src/live/AITuberSystem.py"]
+# Keep container running for testing and manual execution
+CMD ["tail", "-f", "/dev/null"]
