@@ -9,10 +9,10 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 ## 技術スタック
 
 - **言語**: Python 3.13.0
-- **実行環境**: Docker
-- **LLM**: OpenAI API
+- **実行環境**: Docker (完全ヘッドレス)
+- **LLM**: OpenAI API (GPT-4o)
 - **音声合成**: OpenAI TTS (プロトタイプ段階、将来的に他のTTSエンジンへの切り替えを検討)
-- **配信制御**: OBS (OBS WebSocket)
+- **配信**: FFmpeg + RTMP (GUIツール不要)
 - **配信プラットフォーム**: YouTube Live
 
 ## プロジェクト構成
@@ -44,11 +44,9 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 
 ### 前提条件
 
-以下がホスト環境で起動している必要があります:
+- Docker環境が利用可能であること
 
-- **OBS Studio**: WebSocketプラグインが有効（デフォルト: `localhost:4455`）
-
-音声合成はOpenAI TTSを使用するため、VOICEVOXのセットアップは不要です。
+完全なヘッドレス環境で動作するため、OBS StudioやVOICEVOXのセットアップは不要です。
 
 ### 実行方法
 
@@ -70,8 +68,8 @@ docker compose up
 
 ### ネットワーク構成
 
-- `network_mode: host`を使用してホストネットワークに接続
-- これによりコンテナから`localhost`でOBSにアクセス可能
+- 標準的なDockerネットワーク（bridge mode）を使用
+- 外部サービスへの接続はRTMP経由でインターネット経由
 
 ## Makefile
 
@@ -97,6 +95,20 @@ make shell
 より詳細なヘルプが必要な場合は、`makefiles/helps/` ディレクトリにヘルプファイルを追加できます。
 
 ## 開発履歴
+
+### 2025-10-09: FFmpeg + RTMPストリーミング実装
+- OBSAdapterをStreamAdapterに置き換え
+- FFmpegを使用したRTMP配信機能を実装
+- 完全なヘッドレス環境を実現（GUIツール不要）
+- docker-compose.ymlから`network_mode: host`を削除
+- requirements.txtから`obsws-python`を削除
+
+### 2025-10-09: pytestインフラ構築
+- pytestとpytest-dotenvを追加
+- OpenAI API統合テストを実装
+- `makefiles/test.mk`作成（test, test-verbose, test-llmコマンド）
+- Makefile変数化（SERVICE_NAME, CONTAINER_NAME）
+- LLM応答生成テストの成功を確認
 
 ### 2025-10-09: OpenAI TTSへ切り替え
 - 音声合成をVOICEVOXからOpenAI TTSに変更

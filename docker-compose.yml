@@ -11,7 +11,6 @@ services:
     volumes:
       # Mount application code for hot-reload during development
       - ./app:/app
-    network_mode: host  # Connect to OBS on host (VOICEVOX no longer required)
     devices:
       # Access to audio device for sound output
       - /dev/snd:/dev/snd

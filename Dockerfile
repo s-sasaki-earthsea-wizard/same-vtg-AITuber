@@ -4,10 +4,11 @@ FROM python:3.13.0-slim
 # 作業ディレクトリを指定
 WORKDIR /app
 
-# システム依存パッケージのインストール（音声処理に必要）
+# Install system dependencies (audio processing and video streaming)
 RUN apt-get update && apt-get install -y \
     libsndfile1 \
     portaudio19-dev \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # 必要なライブラリをrequirements.txtからインストール

@@ -11,45 +11,35 @@ LLMの応答と合成音声を使用して、YouTubeライブ配信でコメン�
 - YouTube配信でのコメント取得と自動応答
 - OpenAI APIを使用した自然な会話生成
 - OpenAI TTSによる音声合成
-- OBSを使用した配信制御
+- FFmpeg + RTMPによるヘッドレス配信
 
 ## 技術スタック
 
 - **言語**: Python 3.13.0
 - **実行環境**: Docker
-- **LLM**: OpenAI API
+- **LLM**: OpenAI API (GPT-4o)
 - **音声合成**: OpenAI TTS
-- **配信制御**: OBS (OBS WebSocket)
+- **配信**: FFmpeg + RTMP (完全ヘッドレス)
 - **配信プラットフォーム**: YouTube Live
 
 ## 必要な準備
 
-### 1. 外部サービスのセットアップ
+### 1. YouTube配信設定
 
-- **OBS Studio**: OBS WebSocketプラグインを有効化
-- **YouTube**: ライブ配信を開始し、VideoIDを取得
+YouTube Studioでライブ配信を設定し、以下を取得:
+- **Video ID**: 配信URL（配信ごとに変化）
+- **Stream Key**: ライブ配信の設定から取得
 
 ### 2. APIキーの取得
 
-以下のAPIキーを取得してください:
-
-- OpenAI APIキー
-- OBSのWebSocketサーバーパスワード/ポート
-- YouTube配信のVideoID（配信ごとに変化）
+- **OpenAI APIキー**: https://platform.openai.com/api-keys
 
 ## セットアップ方法
 
 ### 前提条件
 
-以下をホスト環境で事前に起動してください:
-
-1. **OBS Studio**
-   - OBS WebSocketプラグインを有効化
-   - デフォルトポート `localhost:4455`
-   - WebSocketパスワードを設定
-
-2. **YouTube配信**
-   - ライブ配信を開始し、VideoIDを取得
+- Docker環境が利用可能であること
+- YouTube配信の設定が完了していること（Video ID、Stream Key）
 
 ### Docker Compose環境での実行（推奨）
 
@@ -129,13 +119,12 @@ python app/src/live/AITuberSystem.py
 # OpenAI API
 OPENAI_API_KEY="your-openai-api-key"
 
-# OBS WebSocket設定
-OBS_WS_PASSWORD="your-obs-websocket-password"
-OBS_WS_HOST="localhost"
-OBS_WS_PORT="4455"
-
 # YouTube配信設定
 YOUTUBE_VIDEO_ID="your-youtube-video-id"
+
+# YouTube RTMP配信設定
+YOUTUBE_RTMP_URL="rtmp://a.rtmp.youtube.com/live2"
+YOUTUBE_STREAM_KEY="your-stream-key"
 ```
 
 ## キャラクター設定のカスタマイズ
@@ -147,8 +136,8 @@ YOUTUBE_VIDEO_ID="your-youtube-video-id"
 
 ## 注意事項
 
-- `AITuberSystem.py`を実行する前に、OBS Studioを起動しておく必要があります
-- YouTube配信のVideoIDは配信ごとに変更する必要があります
+- YouTube配信のVideo IDとStream Keyは配信ごとに確認・更新が必要です
+- 完全なヘッドレス環境で動作するため、GUIツール（OBS、VOICEVOX）は不要です
 - キャラクター設定のカスタマイズは、LLMに手伝ってもらうことを推奨します
 
 ## ライセンスと参考文献
@@ -157,6 +146,13 @@ YOUTUBE_VIDEO_ID="your-youtube-video-id"
 
 ## 開発履歴
 
+- **2025-10-09**: FFmpeg + RTMPストリーミング実装
+  - OBSからFFmpeg + RTMPへ完全移行
+  - ヘッドレス環境で完結する配信システムを実現
+  - network_mode: host依存を削除
+- **2025-10-09**: pytestインフラ構築
+  - OpenAI API統合テストを追加
+  - make test, make test-llmコマンド実装
 - **2025-10-09**: OpenAI TTSへ切り替え
   - 音声合成をVOICEVOXからOpenAI TTSに変更
   - VOICEVOXのセットアップが不要になり、環境構築を簡素化
