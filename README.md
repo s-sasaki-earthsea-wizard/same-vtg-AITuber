@@ -1,96 +1,127 @@
-# プロジェクト名
-
-AITuberKit
+# さめのバーチャルテックガレージ AITuber
 
 ## 概要
 
-このプロジェクトは、書籍「AITuberを作ってみたらプロンプトエンジニアリングがよくわかった件」を基に開発した、AITuberを始めるためのキットです。  
-機能は主に3つあります。
+このプロジェクトは、[rindguitarさんのレポジトリ](https://github.com/rindguitar/AITuber1)のフォークから始まり、**YouTube配信機能に特化**したAITuberシステムです。
 
-1. キャラクターによるX(旧Twitter)への投稿
-2. キャラクターの一日の出来事を生成、日記にし、はてなブログへ投稿
-3. キャラクターによる、YouTube配信でのコメントへの返答
+LLMの応答と合成音声を使用して、YouTubeライブ配信でコメントに自動応答するVTuberを実現します。
 
-## 開発環境
+## 主な機能
 
-- OS: Windows10
-- Python: 3.13.0
+- YouTube配信でのコメント取得と自動応答
+- OpenAI APIを使用した自然な会話生成
+- VOICEVOXによる音声合成
+- OBSを使用した配信制御
 
-## インストール方法
+## 技術スタック
 
-1. リポジトリをローカルにクローンしてください。
+- **言語**: Python 3.13.0
+- **実行環境**: Docker
+- **LLM**: OpenAI API
+- **音声合成**: VOICEVOX
+- **配信制御**: OBS (OBS WebSocket)
+- **配信プラットフォーム**: YouTube Live
+
+## 必要な準備
+
+### 1. 外部サービスのセットアップ
+
+- **VOICEVOX**: ローカル環境で起動しておく必要があります
+- **OBS Studio**: OBS WebSocketプラグインを有効化
+- **YouTube**: ライブ配信を開始し、VideoIDを取得
+
+### 2. APIキーの取得
+
+以下のAPIキーを取得してください:
+
+- OpenAI APIキー
+- OBSのWebSocketサーバーパスワード/ポート
+- YouTube配信のVideoID（配信ごとに変化）
+
+## セットアップ方法
+
+### Docker環境での実行（推奨）
+
+1. リポジトリをクローン
+```bash
+git clone https://github.com/rindguitar/same-vtg-AITuber.git
+cd same-vtg-AITuber
 ```
-git clone https://github.com/rindguitar/AITuber1.git
-```
-2. ファイルを開いてください。
-```
-cd AITuber1
-```
-3. パッケージのインストールをしてください。
-```
-$ pip install -r requirements.txt
-```
-完了したら下記の使い方に従い、使用を始めてください。
 
-## 使い方
-
-1. 下記のAPIキーなどを取得。
-- OpenAIのAPIキー
-- XのConsumerKeysのAPIキー
-- XのConsumerKeysのAPIキーSecret
-- XのBearerToken
-- XのAccessToken
-- XのAccessTokenSecret
-- はてなアカウントのID
-- はてなのルートエンドポイントのURL
-- はてなのAPIキー
-- OBSのサーバーパスワード
-- OBSのサーバーポート
-- YouTube配信のVideoID　配信を変えるごとに都度変化。
-
-2. .envファイルを下記のように作成。  
-※ ダブルクォーテーション内に、1.で取得したものをそれぞれ書き込んでください。
+2. 環境変数の設定
+```bash
+cp .env.example .env
+# .envファイルを編集して必要な値を設定
 ```
-OPENAI_API_KEY="OpenAIのAPIキー"
-CONSUMER_KEY="XのConsumerKeysのAPIキー"
-CONSUMER_SECRET="XのConsumerKeysのAPIキーSecret"
-BEARER_TOKEN="XのBearerToken"
-ACCESS_TOKEN="XのAccessToken"
-ACCESS_TOKEN_SECRET="XのAccessTokenSecret"
-HATENA_ID="はてなアカウントのID"
-HATENA_BLOG_ID="はてなのルートエンドポイントのURL"
-HATENA_KEY="はてなのAPIキー"
-OBS_WS_PASSWORD="OBSのサーバーパスワード"
+
+3. Dockerイメージのビルドと実行
+```bash
+docker build -t aituber .
+docker run --env-file .env aituber
+```
+
+### ローカル環境での実行
+
+1. リポジトリをクローン
+```bash
+git clone https://github.com/rindguitar/same-vtg-AITuber.git
+cd same-vtg-AITuber
+```
+
+2. パッケージのインストール
+```bash
+pip install -r requirements.txt
+```
+
+3. 環境変数の設定（次のセクションを参照）
+
+## 環境変数の設定
+
+`.env`ファイルを作成し、以下の環境変数を設定してください:
+
+```env
+# OpenAI API
+OPENAI_API_KEY="your-openai-api-key"
+
+# OBS WebSocket設定
+OBS_WS_PASSWORD="your-obs-websocket-password"
 OBS_WS_HOST="localhost"
-OBS_WS_PORT="OBSのサーバーポート"
-YOUTUBE_VIDEO_ID="配信のVideoID"
+OBS_WS_PORT="4455"
+
+# YouTube配信設定
+YOUTUBE_VIDEO_ID="your-youtube-video-id"
 ```
 
-3. docsディレクトリ内の、Character settingをはじめとした全てのファイルの内容を、既述を基に自分の好きなように編集。  
-※ daily_things_words内のファイルの名称を変更した際は、一部コードの書き換えが必要になります。  
-例： src/diary/daily_things_maker.py
+## キャラクター設定のカスタマイズ
 
-     ```
-     def load_random_events() -> list[Event]:
-            event_list = [
-        {"file_name": "home_to_gym", "place": "家→ジム"},
-        {"file_name": "gym", "place": "ジム"},
-        {"file_name": "gym_to_bar", "place": "ジム→バー"},
-        {"file_name": "bar", "place": "バー"},
-        {"file_name": "bar_to_home", "place": "バー→家"},
-        {"file_name": "home", "place": "家"}
-        ]
-     ```
-4. あとはプログラムを実行するのみ！  
-※ プログラム内に、そのプログラムの概要説明を記載しております。
+`docs/`ディレクトリ内のファイルを編集して、AITuberのキャラクターをカスタマイズできます:
 
-## その他
+- **Character setting**: キャラクターの基本設定（性格、口調など）
+- **aituber_system_prompt.txt**: AITuberの応答システムプロンプト
 
-OBSAdapter.pyはOBS、VoiceMaker.pyはVOICEVOX、AITuberSystem.pyはOBSとVOICEVOXの両方を起動しないとエラーが発生します。
+## 実行方法
 
-tweet_themeはCharacter settingをLLMに入力し、出力を手伝ってもらうことをオススメします。
+### AITuberシステムの起動
 
-daily_things_words内のファイルには、一日の時系列でキャラクターがいそうな場所を定義し、  
-その場所ごとで起こりそうな出来事やキャラクターの思考、言動をLLMに単語や短文で出力してもらったものを記載してください。
-  
-私はプログラムを書いてまとめただけなので細かな意図などは、書籍「AITuberを作ってみたらプロンプトエンジニアリングがよくわかった件」を読んでいただけると分かると思います。
+1. **VOICEVOX**を起動
+2. **OBS Studio**を起動し、WebSocketを有効化
+3. **YouTube配信**を開始
+4. AITuberシステムを実行:
+
+```bash
+python src/live/AITuberSystem.py
+```
+
+## 注意事項
+
+- `AITuberSystem.py`を実行する前に、OBSとVOICEVOXの両方を起動しておく必要があります
+- YouTube配信のVideoIDは配信ごとに変更する必要があります
+- キャラクター設定のカスタマイズは、LLMに手伝ってもらうことを推奨します
+
+## ライセンスと参考文献
+
+このプロジェクトは、書籍「AITuberを作ってみたらプロンプトエンジニアリングがよくわかった件」を基に開発されています。詳細な実装の意図については、同書籍を参照してください。
+
+## 開発履歴
+
+- **2025-10-08**: YouTube配信機能に特化するため、Twitter投稿機能、はてなブログ投稿機能、日記生成機能を削除
