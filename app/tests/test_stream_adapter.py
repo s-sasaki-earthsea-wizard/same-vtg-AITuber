@@ -38,6 +38,18 @@ class TestStreamAdapter:
         assert adapter.answer_text == ""
         assert adapter.ffmpeg_process is None
 
+        # Verify text file paths are initialized
+        assert adapter.question_textfile == '/tmp/stream_question.txt'
+        assert adapter.answer_textfile == '/tmp/stream_answer.txt'
+
+        # Verify text files are created and empty
+        assert os.path.exists(adapter.question_textfile)
+        assert os.path.exists(adapter.answer_textfile)
+        with open(adapter.question_textfile, 'r') as f:
+            assert f.read() == ""
+        with open(adapter.answer_textfile, 'r') as f:
+            assert f.read() == ""
+
     def test_stream_adapter_missing_credentials(self, monkeypatch):
         """Test StreamAdapter raises exception when credentials are missing"""
         monkeypatch.delenv('YOUTUBE_RTMP_URL', raising=False)
@@ -47,22 +59,30 @@ class TestStreamAdapter:
             StreamAdapter()
 
     def test_set_question_updates_text(self, mock_env, capsys):
-        """Test set_question() updates question text"""
+        """Test set_question() updates question text and text file"""
         adapter = StreamAdapter()
         adapter.set_question("テスト質問ですか？")
 
         assert adapter.question_text == "テスト質問ですか？"
+
+        # Verify text file was updated
+        with open(adapter.question_textfile, 'r', encoding='utf-8') as f:
+            assert f.read() == "テスト質問ですか？"
 
         # Check overlay update was called (via print output)
         captured = capsys.readouterr()
         assert "テスト質問ですか？" in captured.out
 
     def test_set_answer_updates_text(self, mock_env, capsys):
-        """Test set_answer() updates answer text"""
+        """Test set_answer() updates answer text and text file"""
         adapter = StreamAdapter()
         adapter.set_answer("テスト回答です。")
 
         assert adapter.answer_text == "テスト回答です。"
+
+        # Verify text file was updated
+        with open(adapter.answer_textfile, 'r', encoding='utf-8') as f:
+            assert f.read() == "テスト回答です。"
 
         # Check overlay update was called (via print output)
         captured = capsys.readouterr()
@@ -105,7 +125,7 @@ class TestStreamAdapter:
         assert cmd[-1] == expected_destination
 
     def test_ffmpeg_command_includes_text_overlay(self, mock_env):
-        """Test FFmpeg command includes text overlay with question and answer"""
+        """Test FFmpeg command includes textfile-based text overlay with reload"""
         adapter = StreamAdapter()
         adapter.set_question("Q: What is AI?")
         adapter.set_answer("A: Artificial Intelligence")
@@ -116,10 +136,11 @@ class TestStreamAdapter:
         vf_index = cmd.index('-vf')
         vf_value = cmd[vf_index + 1]
 
-        # Verify drawtext filters are present
+        # Verify drawtext filters use textfile and reload
         assert 'drawtext' in vf_value
-        assert "Q: What is AI?" in vf_value
-        assert "A: Artificial Intelligence" in vf_value
+        assert 'textfile=/tmp/stream_question.txt' in vf_value
+        assert 'textfile=/tmp/stream_answer.txt' in vf_value
+        assert 'reload=1' in vf_value
 
     def test_ffmpeg_command_video_settings(self, mock_env):
         """Test FFmpeg command has correct video encoding settings"""
@@ -179,6 +200,57 @@ class TestStreamAdapter:
 
         adapter.set_answer("Second answer")
         assert adapter.answer_text == "Second answer"
+
+    def test_text_file_atomic_write(self, mock_env):
+        """Test text files are written atomically to avoid partial reads"""
+        adapter = StreamAdapter()
+
+        # Write a long text to verify atomic write
+        long_text = "あ" * 1000  # 1000 Japanese characters
+
+        adapter.set_question(long_text)
+
+        # Verify the full text is written correctly
+        with open(adapter.question_textfile, 'r', encoding='utf-8') as f:
+            content = f.read()
+            assert content == long_text
+            assert len(content) == 1000
+
+    def test_text_file_utf8_encoding(self, mock_env):
+        """Test text files support UTF-8 encoding for Japanese text"""
+        adapter = StreamAdapter()
+
+        # Test with various Japanese text
+        japanese_question = "こんにちは、これは質問ですか？"
+        japanese_answer = "はい、これは回答です。日本語テスト。"
+
+        adapter.set_question(japanese_question)
+        adapter.set_answer(japanese_answer)
+
+        # Verify UTF-8 encoding
+        with open(adapter.question_textfile, 'r', encoding='utf-8') as f:
+            assert f.read() == japanese_question
+
+        with open(adapter.answer_textfile, 'r', encoding='utf-8') as f:
+            assert f.read() == japanese_answer
+
+    def test_text_file_overwrite_on_update(self, mock_env):
+        """Test text files are overwritten (not appended) on update"""
+        adapter = StreamAdapter()
+
+        # Set initial text
+        adapter.set_question("First")
+        with open(adapter.question_textfile, 'r') as f:
+            content1 = f.read()
+
+        # Update with new text
+        adapter.set_question("Second")
+        with open(adapter.question_textfile, 'r') as f:
+            content2 = f.read()
+
+        # Verify content was replaced, not appended
+        assert content2 == "Second"
+        assert "First" not in content2
 
 
 if __name__ == "__main__":

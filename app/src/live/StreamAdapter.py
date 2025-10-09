@@ -13,6 +13,7 @@ class StreamAdapter:
     Headless streaming adapter using FFmpeg to broadcast to YouTube Live via RTMP.
 
     Displays question and answer text overlays on a static background image.
+    Text overlays are dynamically updated using FFmpeg's textfile + reload mechanism.
     """
 
     def __init__(self) -> None:
@@ -29,6 +30,14 @@ class StreamAdapter:
         self.question_text = ""
         self.answer_text = ""
 
+        # Text file paths for dynamic overlay updates
+        self.question_textfile = '/tmp/stream_question.txt'
+        self.answer_textfile = '/tmp/stream_answer.txt'
+
+        # Initialize text files
+        self._write_text_file(self.question_textfile, "")
+        self._write_text_file(self.answer_textfile, "")
+
         # FFmpeg process (will be started when streaming begins)
         self.ffmpeg_process = None
 
@@ -36,55 +45,75 @@ class StreamAdapter:
         self.background_image = os.environ.get('STREAM_BACKGROUND_IMAGE', '/app/assets/images/background.png')
 
     def set_question(self, text: str):
-        """Set the question text to display on stream"""
+        """
+        Set the question text to display on stream.
+
+        Updates the text file atomically so FFmpeg can reload it in real-time.
+        """
         self.question_text = text
-        self._update_overlay()
+        self._write_text_file(self.question_textfile, text)
+        print(f"[Stream Overlay] Question: {text}")
 
     def set_answer(self, text: str):
-        """Set the answer text to display on stream"""
+        """
+        Set the answer text to display on stream.
+
+        Updates the text file atomically so FFmpeg can reload it in real-time.
+        """
         self.answer_text = text
-        self._update_overlay()
+        self._write_text_file(self.answer_textfile, text)
+        print(f"[Stream Overlay] Answer: {text}")
 
-    def _update_overlay(self):
+    def _write_text_file(self, filepath: str, text: str):
         """
-        Update the text overlay on the stream.
+        Write text to file atomically to avoid partial reads by FFmpeg.
 
-        In a production implementation, this would dynamically update the FFmpeg
-        drawtext filter. For now, this is a placeholder for the overlay logic.
+        Uses temp file + rename pattern for atomic file updates.
 
-        TODO: Implement dynamic text overlay update mechanism
+        Args:
+            filepath: Target file path
+            text: Text content to write
         """
-        # For initial implementation, we'll log the text changes
-        # Full implementation would require either:
-        # 1. Regenerating overlay images and updating FFmpeg input
-        # 2. Using FFmpeg's zmq filter for dynamic text updates
-        # 3. Using a separate overlay rendering service
-
-        print(f"[Stream Overlay] Question: {self.question_text}")
-        print(f"[Stream Overlay] Answer: {self.answer_text}")
+        # Write to temporary file first
+        temp_fd, temp_path = tempfile.mkstemp(dir='/tmp', text=True)
+        try:
+            with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
+                f.write(text)
+            # Atomic rename (POSIX guarantees atomicity)
+            os.rename(temp_path, filepath)
+        except Exception as e:
+            # Clean up temp file if rename fails
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+            raise Exception(f"Failed to write text file {filepath}: {e}")
 
     def _build_ffmpeg_command(self) -> list[str]:
         """
-        Build FFmpeg command for RTMP streaming.
+        Build FFmpeg command for RTMP streaming with dynamic text overlays.
 
         Returns:
             list[str]: FFmpeg command arguments
 
         Note: This method is extracted for testability. It constructs the command
         but does not execute it.
+
+        Text overlays are dynamically updated using textfile + reload=1 mechanism.
+        FFmpeg reads the text files every frame, enabling real-time text updates.
         """
         rtmp_destination = f"{self.rtmp_url}/{self.stream_key}"
 
-        # FFmpeg command for streaming
-        # Note: This is a basic implementation. Text overlay updates require
-        # more advanced techniques (see _update_overlay TODO)
+        # FFmpeg command for streaming with dynamic text overlays
         ffmpeg_cmd = [
             'ffmpeg',
             '-re',  # Read input at native frame rate
             '-loop', '1',  # Loop the background image
             '-i', self.background_image,  # Input: background image
-            '-vf', f"drawtext=text='{self.question_text}':fontsize=24:fontcolor=white:x=50:y=50,"
-                   f"drawtext=text='{self.answer_text}':fontsize=32:fontcolor=yellow:x=50:y=100",
+            '-vf', (
+                f"drawtext=textfile={self.question_textfile}:reload=1:"
+                f"fontsize=24:fontcolor=white:x=50:y=50,"
+                f"drawtext=textfile={self.answer_textfile}:reload=1:"
+                f"fontsize=32:fontcolor=yellow:x=50:y=100"
+            ),
             '-c:v', 'libx264',  # Video codec
             '-preset', 'veryfast',  # Encoding preset for low latency
             '-maxrate', '3000k',  # Max bitrate

@@ -122,12 +122,20 @@ make shell
 
 ## 開発履歴
 
+### 2025-10-09: 動的テキストオーバーレイ実装
+- FFmpegの`textfile` + `reload=1`メカニズムを使用した動的テキスト更新を実装
+- アトミックファイル更新（temp file → rename）でFFmpegの部分読み込みを防止
+- 質問・回答テキストがリアルタイムで配信画面に反映される
+- 17のユニットテストを追加（UTF-8エンコーディング、アトミック書き込み、複数更新など）
+- 手動テストスクリプト（`tests/manual_stream_test.py`）を追加
+
 ### 2025-10-09: FFmpeg + RTMPストリーミング実装
 - OBSAdapterをStreamAdapterに置き換え
 - FFmpegを使用したRTMP配信機能を実装
 - 完全なヘッドレス環境を実現（GUIツール不要）
 - docker-compose.ymlから`network_mode: host`を削除
 - requirements.txtから`obsws-python`を削除
+- 静的テキストオーバーレイ実装（後に動的更新へアップグレード）
 
 ### 2025-10-09: pytestインフラ構築
 - pytestとpytest-dotenvを追加
