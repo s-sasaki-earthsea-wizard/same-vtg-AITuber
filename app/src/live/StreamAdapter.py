@@ -22,11 +22,11 @@ class StreamAdapter:
         load_dotenv()
 
         # Get RTMP credentials from environment
-        self.rtmp_url = os.environ.get('YOUTUBE_RTMP_URL')
-        self.stream_key = os.environ.get('YOUTUBE_STREAM_KEY')
+        self.rtmp_url = os.environ.get('STREAM_RTMP_URL')
+        self.stream_key = os.environ.get('STREAM_KEY')
 
         if not self.rtmp_url or not self.stream_key:
-            raise Exception("YouTube RTMP credentials not configured. Set YOUTUBE_RTMP_URL and YOUTUBE_STREAM_KEY in .env")
+            raise Exception("RTMP streaming credentials not configured. Set STREAM_RTMP_URL and STREAM_KEY in .env")
 
         # Text overlay state
         self.question_text = ""
