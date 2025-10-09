@@ -17,3 +17,12 @@ services:
     restart: unless-stopped
     stdin_open: true
     tty: true
+
+  rtmp-server:
+    image: tiangolo/nginx-rtmp
+    container_name: rtmp-server
+    ports:
+      - "1935:1935"  # RTMP port
+    profiles:
+      - dev  # Only start when explicitly requested with --profile dev
+    restart: unless-stopped

@@ -2,6 +2,7 @@
 # This file contains all Docker and Docker Compose commands
 
 .PHONY: docker-up docker-start docker-down docker-restart docker-logs docker-shell
+.PHONY: docker-up-dev docker-down-dev docker-logs-rtmp
 .PHONY: docker-build docker-rebuild docker-clean
 .PHONY: docker-env-setup docker-env-check
 
@@ -23,6 +24,16 @@ docker-logs:  ## Show Docker Compose logs
 
 docker-shell:  ## Open shell in container
 	docker compose exec $(SERVICE_NAME) /bin/bash
+
+## Development with Local RTMP Server
+docker-up-dev:  ## Start with local RTMP server for testing (build included)
+	docker compose --profile dev up --build
+
+docker-down-dev:  ## Stop all containers including RTMP server
+	docker compose --profile dev down
+
+docker-logs-rtmp:  ## Show RTMP server logs
+	docker compose logs -f rtmp-server
 
 ## Docker Image Management
 docker-build:  ## Build Docker image
@@ -62,6 +73,9 @@ down: docker-down  ## Alias for docker-down
 restart: docker-restart  ## Alias for docker-restart
 logs: docker-logs  ## Alias for docker-logs
 shell: docker-shell  ## Alias for docker-shell
+up-dev: docker-up-dev  ## Alias for docker-up-dev
+down-dev: docker-down-dev  ## Alias for docker-down-dev
+logs-rtmp: docker-logs-rtmp  ## Alias for docker-logs-rtmp
 build: docker-build  ## Alias for docker-build
 rebuild: docker-rebuild  ## Alias for docker-rebuild
 clean: docker-clean  ## Alias for docker-clean

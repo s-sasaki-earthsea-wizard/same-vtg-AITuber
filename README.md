@@ -127,6 +127,57 @@ YOUTUBE_RTMP_URL="rtmp://a.rtmp.youtube.com/live2"
 YOUTUBE_STREAM_KEY="your-stream-key"
 ```
 
+## ローカルRTMPサーバーでの開発（オプション）
+
+YouTube Liveに接続せずに、ローカル環境で配信テストを行うことができます。
+
+### 1. ローカルRTMPサーバーの起動
+
+```bash
+make up-dev
+```
+
+これにより、AITuberコンテナと一緒にローカルRTMPサーバーが起動します。
+
+### 2. 環境変数の切り替え
+
+`.env`ファイルを以下のように変更:
+
+```env
+# YouTube本番環境（コメントアウト）
+# YOUTUBE_RTMP_URL="rtmp://a.rtmp.youtube.com/live2"
+# YOUTUBE_STREAM_KEY="your-stream-key"
+
+# ローカルRTMP環境
+YOUTUBE_RTMP_URL="rtmp://rtmp-server:1935/live"
+YOUTUBE_STREAM_KEY="test"
+```
+
+### 3. ストリームの視聴
+
+VLCやFFplayでストリームを視聴できます:
+
+```bash
+# VLCで視聴
+vlc rtmp://localhost:1935/live/test
+
+# FFplayで視聴
+ffplay rtmp://localhost:1935/live/test
+```
+
+### 4. ローカルRTMPサーバーの停止
+
+```bash
+make down-dev
+```
+
+### メリット
+
+- YouTube Liveへの接続不要
+- 開発サイクルの高速化
+- 配信履歴が残らない
+- Stream Keyの消費なし
+
 ## キャラクター設定のカスタマイズ
 
 `app/docs/`ディレクトリ内のファイルを編集して、AITuberのキャラクターをカスタマイズできます:

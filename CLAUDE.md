@@ -74,6 +74,29 @@ docker compose up
 - 標準的なDockerネットワーク（bridge mode）を使用
 - 外部サービスへの接続はRTMP経由でインターネット経由
 
+### ローカルRTMP開発環境（オプション）
+
+YouTube Liveに接続せずにローカルでストリーミングテストが可能:
+
+```bash
+# ローカルRTMPサーバー付きで起動
+make up-dev
+
+# .envでRTMP URLを切り替え
+YOUTUBE_RTMP_URL="rtmp://rtmp-server:1935/live"
+YOUTUBE_STREAM_KEY="test"
+
+# VLC/FFplayで視聴
+vlc rtmp://localhost:1935/live/test
+```
+
+**メリット**:
+- YouTube API制限回避
+- 開発サイクル高速化（5-10分 → 30秒）
+- 配信履歴が残らない
+
+**将来の拡張**: Webベースのプレビュー機能（HLS.js + nginx）も検討可能
+
 ## Makefile
 
 プロジェクトには便利なMakeコマンドが用意されています:
