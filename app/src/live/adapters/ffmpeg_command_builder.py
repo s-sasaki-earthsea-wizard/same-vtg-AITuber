@@ -80,13 +80,16 @@ class FFmpegCommandBuilder:
             '-i', config.background_image,  # Input: background image
         ])
 
-        # Video filter for text overlays
+        # Video filter for text overlays with Japanese font support
+        # Noto Sans CJK JP font is installed via fonts-noto-cjk package
+        fontfile = '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'
+
         ffmpeg_cmd.extend([
             '-vf', (
                 f"drawtext=textfile={config.question_textfile}:reload=1:"
-                f"fontsize=24:fontcolor=white:x=50:y=50,"
+                f"fontfile={fontfile}:fontsize=24:fontcolor=white:x=50:y=50,"
                 f"drawtext=textfile={config.answer_textfile}:reload=1:"
-                f"fontsize=32:fontcolor=yellow:x=50:y=100"
+                f"fontfile={fontfile}:fontsize=32:fontcolor=yellow:x=50:y=100"
             ),
         ])
 

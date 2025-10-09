@@ -4,11 +4,12 @@ FROM python:3.13.0-slim
 # 作業ディレクトリを指定
 WORKDIR /app
 
-# Install system dependencies (audio processing and video streaming)
+# Install system dependencies (audio processing, video streaming, and Japanese fonts)
 RUN apt-get update && apt-get install -y \
     libsndfile1 \
     portaudio19-dev \
     ffmpeg \
+    fonts-noto-cjk \
     && rm -rf /var/lib/apt/lists/*
 
 # 必要なライブラリをrequirements.txtからインストール
