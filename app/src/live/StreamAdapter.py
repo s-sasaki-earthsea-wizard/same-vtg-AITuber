@@ -32,8 +32,8 @@ class StreamAdapter:
         # FFmpeg process (will be started when streaming begins)
         self.ffmpeg_process = None
 
-        # Background image path (can be customized)
-        self.background_image = os.environ.get('STREAM_BACKGROUND_IMAGE', 'assets/background.png')
+        # Background image path (can be customized via environment variable)
+        self.background_image = os.environ.get('STREAM_BACKGROUND_IMAGE', '/app/assets/images/background.png')
 
     def set_question(self, text: str):
         """Set the question text to display on stream"""

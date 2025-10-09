@@ -25,14 +25,17 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 │   │   │   └── openai_adapter.py
 │   │   └── live/             # YouTube配信関連機能
 │   │       ├── AITuberSystem.py        # メインシステム
-│   │       ├── OBSAdapter.py           # OBS制御
+│   │       ├── StreamAdapter.py        # FFmpeg RTMP配信制御
 │   │       ├── VoiceMaker.py           # 音声合成
 │   │       ├── PlaySound.py            # 音声再生
 │   │       ├── talker.py               # 発話制御
 │   │       └── youtube_comment_adapter.py  # コメント取得
-│   └── docs/
-│       ├── aituber_system_prompt.txt   # システムプロンプト
-│       └── Character setting           # キャラクター設定
+│   ├── docs/
+│   │   ├── aituber_system_prompt.txt   # システムプロンプト
+│   │   └── Character setting           # キャラクター設定
+│   └── assets/
+│       └── images/
+│           └── background.png          # 配信用背景画像
 ├── Dockerfile            # Docker環境定義
 ├── docker-compose.yml    # Docker Compose設定
 ├── requirements.txt      # Python依存パッケージ
