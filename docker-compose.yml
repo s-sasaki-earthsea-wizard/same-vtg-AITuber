@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  same-vtg-aituber:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: same-vtg-aituber
+    env_file:
+      - .env
+    volumes:
+      # Mount application code for hot-reload during development
+      - ./app:/app
+    devices:
+      # Access to audio device for sound output
+      - /dev/snd:/dev/snd
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  rtmp-server:
+    image: tiangolo/nginx-rtmp
+    container_name: rtmp-server
+    ports:
+      - "1935:1935"  # RTMP port
+    profiles:
+      - dev  # Only start when explicitly requested with --profile dev
+    restart: unless-stopped

@@ -1,0 +1,2 @@
+# This directory will contain detailed help files for Makefile commands
+# Each command can have its own help file: makefiles/helps/<command>.txt

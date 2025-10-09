@@ -177,5 +177,3 @@ pyrightconfig.json
 
 # environment variables
 .env
-
-diff-with-head.txt

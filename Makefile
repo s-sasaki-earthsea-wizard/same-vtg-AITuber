@@ -1,12 +1,39 @@
-.PHONY: build run help
+# Main Makefile for same-vtg-AITuber project
+# This file includes all sub-makefiles and provides the help command
 
+.PHONY: help
+
+# Project configuration
+SERVICE_NAME := same-vtg-aituber
+CONTAINER_NAME := $(SERVICE_NAME)
+export SERVICE_NAME
+export CONTAINER_NAME
+
+# Default target
 default: help
 
-build:  ## Dockerイメージをビルド
-	docker build -t aituberkit .
+# Include all sub-makefiles
+include makefiles/docker.mk
+include makefiles/test.mk
 
-run:  ## Dockerコンテナを起動
-	docker run -it aituberkit
+# Add more includes here as needed:
+# include makefiles/lint.mk
+# include makefiles/deploy.mk
 
-help:  ## ヘルプ
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+## Help
+help:  ## Show this help message
+	@echo "=== Available Commands ==="
+	@echo ""
+	@echo "\033[1mDocker Commands:\033[0m"
+	@grep -E '^docker-[a-zA-Z_-]+:.*?## .*$$' makefiles/docker.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo "\033[1mTest Commands:\033[0m"
+	@grep -E '^docker-test[a-zA-Z_-]*:.*?## .*$$' makefiles/test.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo "\033[1mConvenience Aliases:\033[0m"
+	@grep -E '^(up|start|down|restart|logs|shell|build|rebuild|clean|env-setup|env-check|test|test-verbose|test-v):.*?## .*$$' makefiles/docker.mk makefiles/test.mk | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo "\033[1mHelp:\033[0m"
+	@echo "  \033[36mhelp                \033[0m Show this help message"
+	@echo ""
+	@echo "Note: Detailed help files can be added to makefiles/helps/ directory"

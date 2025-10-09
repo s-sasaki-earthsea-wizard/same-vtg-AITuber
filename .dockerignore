@@ -1,2 +1,34 @@
 # Environment variables
 .env
+
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+*.md
+CLAUDE.md
+README.md
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

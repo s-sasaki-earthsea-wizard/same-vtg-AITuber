@@ -19,11 +19,17 @@ class VoiceIO(TypedDict):
 
 class VoiceMaker:
     @staticmethod
+    def make_voice_tts(text: str) -> VoiceIO:
+        """Generate voice using the configured TTS engine (currently OpenAI TTS)"""
+        return VoiceMaker.make_voice_openai(text)
+
+    @staticmethod
     def make_voice_openai(text: str) -> VoiceIO:
         adapter = OpenAIAdapter()
         response_bytes = adapter.create_voice(text)
         data,sample_rate = soundfile.read(io.BytesIO(response_bytes))
         return VoiceIO(data=data, sample_rate=sample_rate)
+
     @staticmethod
     def make_voice_voicevox(text: str) -> VoiceIO:
         adapter = VoicevoxAdapter()

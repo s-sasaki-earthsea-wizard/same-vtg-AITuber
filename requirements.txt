@@ -10,4 +10,5 @@ typing_extensions==4.12.2
 soundfile==0.13.0
 pytchat==0.5.5
 sounddevice==0.5.1
-obsws-python==1.7.0
+pytest==8.3.4
+pytest-dotenv==0.5.2
