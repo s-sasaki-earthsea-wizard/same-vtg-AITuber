@@ -27,12 +27,13 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 │   │       ├── adapters/                        # 配信アダプター（モジュール分離）
 │   │       │   ├── ffmpeg_command_builder.py   # FFmpegコマンド構築
 │   │       │   └── stream_file_manager.py      # ストリーミングファイルI/O
-│   │       ├── AITuberSystem.py        # メインシステム
-│   │       ├── StreamAdapter.py        # FFmpeg RTMP配信制御（ファサード）
-│   │       ├── VoiceMaker.py           # 音声合成
-│   │       ├── PlaySound.py            # 音声再生
-│   │       ├── talker.py               # 発話制御
-│   │       └── youtube_comment_adapter.py  # コメント取得
+│   │       ├── AITuberSystem.py           # メインシステム
+│   │       ├── StreamAdapter.py           # FFmpeg RTMP配信制御（ファサード）
+│   │       ├── VoiceMaker.py              # 音声合成
+│   │       ├── PlaySound.py               # 音声再生
+│   │       ├── talker.py                  # 発話制御
+│   │       ├── manual_streaming_demo.py   # 手動デモスクリプト
+│   │       └── youtube_comment_adapter.py # コメント取得
 │   ├── docs/
 │   │   ├── aituber_system_prompt.txt   # システムプロンプト
 │   │   └── Character setting           # キャラクター設定
@@ -85,11 +86,13 @@ YouTube Liveに接続せずにローカルでストリーミングテストが�
 # ローカルRTMPサーバー付きで起動
 make up-dev
 
-# .envでRTMP URLを切り替え
-YOUTUBE_RTMP_URL="rtmp://rtmp-server:1935/live"
-YOUTUBE_STREAM_KEY="test"
+# デモスクリプトを実行（デフォルト60秒）
+make demo
 
-# VLC/FFplayで視聴
+# カスタム時間で実行
+make demo DURATION=30  # 30秒
+
+# VLCで視聴
 vlc rtmp://localhost:1935/live/test
 ```
 
@@ -97,6 +100,7 @@ vlc rtmp://localhost:1935/live/test
 - YouTube API制限回避
 - 開発サイクル高速化（5-10分 → 30秒）
 - 配信履歴が残らない
+- OpenAI APIクレジット不要（デモスクリプト使用時）
 
 **将来の拡張**: Webベースのプレビュー機能（HLS.js + nginx）も検討可能
 
@@ -108,22 +112,51 @@ vlc rtmp://localhost:1935/live/test
 # ヘルプを表示
 make help
 
-# 環境変数をセットアップ
-make env-setup
+# 開発環境起動（ローカルRTMP付き）
+make up-dev
 
-# Docker Composeで起動
-make up
+# 本番環境起動（YouTube Live用）
+make up-prod
+
+# デモスクリプト実行
+make demo              # 60秒（デフォルト）
+make demo DURATION=30  # 30秒
 
 # ログを表示
 make logs
+make logs-rtmp  # RTMPサーバーログ
 
 # コンテナ内でシェルを起動
 make shell
 ```
 
+Makefileは以下のファイルに分割されています:
+- `makefiles/docker.mk` - Docker環境管理（up-dev, up-prod, logs等）
+- `makefiles/test.mk` - テスト実行（test, test-verbose等）
+- `makefiles/stream.mk` - ストリーミング関連（demo, demo-help等）
+
 より詳細なヘルプが必要な場合は、`makefiles/helps/` ディレクトリにヘルプファイルを追加できます。
 
 ## 開発履歴
+
+### 2025-10-09: Makefileリファクタリング + 日本語フォント対応 + デモスクリプト改善
+- **Makefileリファクタリング**:
+  - `makefiles/stream.mk` 新設（ストリーミング関連コマンドを分離）
+  - 環境を明示的に区別: `make up-dev` (開発) vs `make up-prod` (本番)
+  - レガシーターゲット削除: `docker-up`, `docker-start`
+  - エイリアス整理: `demo`, `demo-help`, `up-dev`, `up-prod`
+- **日本語フォント対応**:
+  - Dockerfileに `fonts-noto-cjk` パッケージ追加
+  - FFmpegCommandBuilderにフォントファイルパス指定 (`NotoSansCJK-Regular.ttc`)
+  - 文字化け問題を解決、日本語テキストオーバーレイが正常表示
+- **デモスクリプト改善**:
+  - `manual_streaming_demo.py` に実行時間指定機能追加
+  - `make demo DURATION=30` で実行時間をカスタマイズ可能（デフォルト60秒）
+  - 10秒ごとの動的テキスト更新を維持
+- **環境変数命名改善**:
+  - `YOUTUBE_RTMP_URL` → `STREAM_RTMP_URL` (プラットフォーム非依存)
+  - `YOUTUBE_STREAM_KEY` → `STREAM_KEY`
+  - OBS関連の環境変数削除（OBS_WS_PASSWORD等）
 
 ### 2025-10-09: StreamAdapterリファクタリング
 - `app/src/live/adapters/` ディレクトリ新設（関心事の分離）

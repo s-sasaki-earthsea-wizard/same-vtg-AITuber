@@ -1,17 +1,12 @@
 # Docker-related Makefile targets
 # This file contains all Docker and Docker Compose commands
 
-.PHONY: docker-up docker-start docker-down docker-restart docker-logs docker-shell
-.PHONY: docker-up-dev docker-down-dev docker-logs-rtmp
+.PHONY: docker-down docker-restart docker-logs docker-shell
+.PHONY: docker-up-dev docker-up-prod docker-down-dev docker-restart-dev docker-logs-rtmp
 .PHONY: docker-build docker-rebuild docker-clean
 .PHONY: docker-env-setup docker-env-check
 
 ## Docker Compose Commands
-docker-up:  ## Start with Docker Compose (build included)
-	docker compose up --build
-
-docker-start:  ## Start with Docker Compose (no build)
-	docker compose up
 
 docker-down:  ## Stop and remove containers
 	docker compose down
@@ -25,12 +20,27 @@ docker-logs:  ## Show Docker Compose logs
 docker-shell:  ## Open shell in container
 	docker compose exec $(SERVICE_NAME) /bin/bash
 
-## Development with Local RTMP Server
-docker-up-dev:  ## Start with local RTMP server for testing (build included)
-	docker compose --profile dev up --build
+## Environment-Specific Commands
+
+docker-up-dev:  ## Start development environment with local RTMP server (build included)
+	docker compose --profile dev up --build -d
+	@echo "✅ Development environment started"
+	@echo "📺 RTMP server: rtmp://localhost:1935/live/test"
+	@echo "🎬 Run demo: make demo"
+
+docker-up-prod:  ## Start production environment for YouTube Live streaming (build included)
+	docker compose up --build -d
+	@echo "✅ Production environment started"
+	@echo "🚀 Ready for YouTube Live streaming"
+	@echo "⚙️  Configure .env with YouTube RTMP credentials"
 
 docker-down-dev:  ## Stop all containers including RTMP server
 	docker compose --profile dev down
+
+docker-restart-dev:  ## Restart development environment (rebuild with new dependencies)
+	docker compose --profile dev down
+	docker compose --profile dev up --build -d
+	@echo "✅ Development environment restarted"
 
 docker-logs-rtmp:  ## Show RTMP server logs
 	docker compose logs -f rtmp-server
@@ -67,14 +77,14 @@ docker-env-check:  ## Check environment variables
 	fi
 
 ## Convenience aliases (shorter names)
-up: docker-up  ## Alias for docker-up
-start: docker-start  ## Alias for docker-start
 down: docker-down  ## Alias for docker-down
 restart: docker-restart  ## Alias for docker-restart
 logs: docker-logs  ## Alias for docker-logs
 shell: docker-shell  ## Alias for docker-shell
 up-dev: docker-up-dev  ## Alias for docker-up-dev
+up-prod: docker-up-prod  ## Alias for docker-up-prod
 down-dev: docker-down-dev  ## Alias for docker-down-dev
+restart-dev: docker-restart-dev  ## Alias for docker-restart-dev
 logs-rtmp: docker-logs-rtmp  ## Alias for docker-logs-rtmp
 build: docker-build  ## Alias for docker-build
 rebuild: docker-rebuild  ## Alias for docker-rebuild

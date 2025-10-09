@@ -81,12 +81,16 @@ make down
 make help        # 利用可能なコマンドを表示
 make env-setup   # .envファイルをセットアップ
 make env-check   # 環境変数の設定を確認
-make up          # ビルド・起動
-make start       # 起動（ビルドなし）
+make up-dev      # 開発環境起動（ローカルRTMP付き）
+make up-prod     # 本番環境起動（YouTube Live用）
 make down        # 停止
+make down-dev    # 開発環境停止（RTMP含む）
 make restart     # 再起動
 make logs        # ログ表示
+make logs-rtmp   # RTMPサーバーログ表示
 make shell       # コンテナ内でシェル起動
+make demo        # デモスクリプト実行（60秒）
+make demo DURATION=30  # デモスクリプト実行（30秒）
 make clean       # コンテナ・イメージ・ボリュームを削除
 ```
 
@@ -139,21 +143,36 @@ make up-dev
 
 これにより、AITuberコンテナと一緒にローカルRTMPサーバーが起動します。
 
-### 2. 環境変数の切り替え
+### 2. 環境変数の設定
 
-`.env`ファイルを以下のように変更:
+`.env`ファイルでRTMP設定を確認:
 
 ```env
-# YouTube本番環境（コメントアウト）
-# YOUTUBE_RTMP_URL="rtmp://a.rtmp.youtube.com/live2"
-# YOUTUBE_STREAM_KEY="your-stream-key"
+# ローカルRTMP環境（開発用）
+STREAM_RTMP_URL="rtmp://rtmp-server:1935/live"
+STREAM_KEY="test"
 
-# ローカルRTMP環境
-YOUTUBE_RTMP_URL="rtmp://rtmp-server:1935/live"
-YOUTUBE_STREAM_KEY="test"
+# YouTube本番環境（本番配信時に使用）
+# STREAM_RTMP_URL="rtmp://a.rtmp.youtube.com/live2"
+# STREAM_KEY="your-stream-key"
 ```
 
-### 3. ストリームの視聴
+### 3. デモスクリプトの実行
+
+```bash
+# デフォルト（60秒）
+make demo
+
+# カスタム時間
+make demo DURATION=30  # 30秒
+```
+
+このデモスクリプトは：
+- 静的背景画像を配信
+- 日本語テキストオーバーレイを動的更新（10秒ごと）
+- OpenAI APIを使用しない（コスト0円）
+
+### 4. ストリームの視聴
 
 VLCやFFplayでストリームを視聴できます:
 
@@ -165,7 +184,7 @@ vlc rtmp://localhost:1935/live/test
 ffplay rtmp://localhost:1935/live/test
 ```
 
-### 4. ローカルRTMPサーバーの停止
+### 5. ローカルRTMPサーバーの停止
 
 ```bash
 make down-dev
@@ -177,6 +196,7 @@ make down-dev
 - 開発サイクルの高速化
 - 配信履歴が残らない
 - Stream Keyの消費なし
+- OpenAI APIクレジット不要（デモ使用時）
 
 ## キャラクター設定のカスタマイズ
 
@@ -197,6 +217,12 @@ make down-dev
 
 ## 開発履歴
 
+- **2025-10-09**: Makefileリファクタリング + 日本語フォント対応 + デモスクリプト改善
+  - Makefileを3ファイルに分割（docker.mk, test.mk, stream.mk）
+  - 開発/本番環境を明示的に区別（up-dev vs up-prod）
+  - 日本語フォント対応（Noto Sans CJK）で文字化け解消
+  - デモスクリプトに実行時間指定機能追加（DURATION引数）
+  - 環境変数命名改善（STREAM_RTMP_URL, STREAM_KEY）
 - **2025-10-09**: StreamAdapterリファクタリング + 音声ストリーミング統合
   - 音声ファイル経由のストリーミング対応（WAV → RTMP）
   - StreamAdapterの責務分離（164行に簡素化、30%削減）
