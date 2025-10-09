@@ -31,6 +31,23 @@ class VoiceMaker:
         return VoiceIO(data=data, sample_rate=sample_rate)
 
     @staticmethod
+    def save_voice_to_file(voice_io: VoiceIO, filepath: str) -> None:
+        """
+        Save VoiceIO to WAV file for FFmpeg audio streaming.
+
+        Args:
+            voice_io: Voice data with sample rate
+            filepath: Target file path (e.g., '/tmp/audio.wav')
+
+        Raises:
+            Exception: If file write fails
+        """
+        try:
+            soundfile.write(filepath, voice_io["data"], voice_io["sample_rate"])
+        except Exception as e:
+            raise Exception(f"Failed to save voice file to {filepath}: {e}")
+
+    @staticmethod
     def make_voice_voicevox(text: str) -> VoiceIO:
         adapter = VoicevoxAdapter()
         return adapter.get_voice(text)

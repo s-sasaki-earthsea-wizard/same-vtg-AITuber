@@ -134,6 +134,58 @@ class TestVoiceMaker:
 
         print(f"\n[Consecutive TTS] Successfully generated {len(voice_ios)} audio samples")
 
+    def test_save_voice_to_file(self):
+        """Test that save_voice_to_file creates valid WAV files"""
+        test_text = "ファイル保存のテストです。"
+
+        voice_io = VoiceMaker.make_voice_tts(test_text)
+
+        # Create temporary file path
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+            tmp_path = Path(tmp_file.name)
+
+        try:
+            # Save voice to file using new method
+            VoiceMaker.save_voice_to_file(voice_io, str(tmp_path))
+
+            # Verify file was created and has content
+            assert tmp_path.exists(), "Audio file was not created"
+            assert tmp_path.stat().st_size > 1000, "Audio file is too small"
+
+            # Verify file can be read back
+            data, sample_rate = soundfile.read(str(tmp_path))
+            assert len(data) > 0
+            assert sample_rate == voice_io["sample_rate"]
+
+            print(f"\n[save_voice_to_file] Successfully wrote {tmp_path.stat().st_size} bytes")
+
+        finally:
+            # Cleanup
+            if tmp_path.exists():
+                tmp_path.unlink()
+
+    def test_save_voice_to_file_with_long_audio(self):
+        """Test saving longer audio files"""
+        test_text = "これは長い音声ファイルのテストです。複数の文章を含んでいます。音声合成の品質を確認します。"
+
+        voice_io = VoiceMaker.make_voice_tts(test_text)
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
+            tmp_path = Path(tmp_file.name)
+
+        try:
+            VoiceMaker.save_voice_to_file(voice_io, str(tmp_path))
+
+            # Verify file size is reasonable for longer audio
+            file_size = tmp_path.stat().st_size
+            assert file_size > 5000, f"Audio file too small: {file_size} bytes"
+
+            print(f"\n[Long Audio] Saved {file_size} bytes ({len(voice_io['data'])} samples)")
+
+        finally:
+            if tmp_path.exists():
+                tmp_path.unlink()
+
 
 if __name__ == "__main__":
     # Allow running tests directly with: python test_voice_maker.py

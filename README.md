@@ -197,6 +197,10 @@ make down-dev
 
 ## 開発履歴
 
+- **2025-10-09**: StreamAdapterリファクタリング + 音声ストリーミング統合
+  - 音声ファイル経由のストリーミング対応（WAV → RTMP）
+  - StreamAdapterの責務分離（164行に簡素化、30%削減）
+  - StreamFileManager/FFmpegCommandBuilderモジュール追加
 - **2025-10-09**: 動的テキストオーバーレイ実装
   - FFmpeg textfile + reload=1でリアルタイムテキスト更新
   - 質問・回答テキストが配信中に動的に変更可能

@@ -24,8 +24,11 @@ YouTubeでLLMの応答と合成音声によりライブ配信を行うVTuber、�
 │   │   ├── api/              # OpenAI API連携
 │   │   │   └── openai_adapter.py
 │   │   └── live/             # YouTube配信関連機能
+│   │       ├── adapters/                        # 配信アダプター（モジュール分離）
+│   │       │   ├── ffmpeg_command_builder.py   # FFmpegコマンド構築
+│   │       │   └── stream_file_manager.py      # ストリーミングファイルI/O
 │   │       ├── AITuberSystem.py        # メインシステム
-│   │       ├── StreamAdapter.py        # FFmpeg RTMP配信制御
+│   │       ├── StreamAdapter.py        # FFmpeg RTMP配信制御（ファサード）
 │   │       ├── VoiceMaker.py           # 音声合成
 │   │       ├── PlaySound.py            # 音声再生
 │   │       ├── talker.py               # 発話制御
@@ -121,6 +124,21 @@ make shell
 より詳細なヘルプが必要な場合は、`makefiles/helps/` ディレクトリにヘルプファイルを追加できます。
 
 ## 開発履歴
+
+### 2025-10-09: StreamAdapterリファクタリング
+- `app/src/live/adapters/` ディレクトリ新設（関心事の分離）
+- `StreamFileManager` クラス追加（アトミックファイルI/O管理）
+- `FFmpegCommandBuilder` クラス追加（コマンド構築ロジック分離）
+- `StreamAdapter` を164行に簡素化（233行 → 164行、約30%削減）
+- ファサードパターンによる責務の明確化
+- 31テストすべてパス（VoiceMaker: 8テスト、StreamAdapter: 23テスト）
+
+### 2025-10-09: 音声ストリーミング統合
+- VoiceMakerに`save_voice_to_file()`メソッド追加（VoiceIO → WAVファイル保存）
+- StreamAdapterに`set_audio_file()`メソッド追加（音声ファイル指定）
+- FFmpegコマンドを音声入力対応に更新（WAVファイル入力 or anullsrc無音）
+- AITuberSystemの音声処理フロー更新（ファイル経由でストリーミング）
+- 音声なし時はanullsrcで無音ストリームを自動生成
 
 ### 2025-10-09: 動的テキストオーバーレイ実装
 - FFmpegの`textfile` + `reload=1`メカニズムを使用した動的テキスト更新を実装

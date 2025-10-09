@@ -3,9 +3,10 @@
 
 import os
 import subprocess
-import tempfile
 from pathlib import Path
 from dotenv import load_dotenv
+from .adapters.stream_file_manager import StreamFileManager
+from .adapters.ffmpeg_command_builder import FFmpegCommandBuilder, StreamConfig
 
 
 class StreamAdapter:
@@ -14,6 +15,7 @@ class StreamAdapter:
 
     Displays question and answer text overlays on a static background image.
     Text overlays are dynamically updated using FFmpeg's textfile + reload mechanism.
+    Audio can be provided via set_audio_file() for synchronized A/V streaming.
     """
 
     def __init__(self) -> None:
@@ -34,9 +36,14 @@ class StreamAdapter:
         self.question_textfile = '/tmp/stream_question.txt'
         self.answer_textfile = '/tmp/stream_answer.txt'
 
-        # Initialize text files
-        self._write_text_file(self.question_textfile, "")
-        self._write_text_file(self.answer_textfile, "")
+        # Initialize text files using StreamFileManager
+        StreamFileManager.initialize_text_files(
+            self.question_textfile,
+            self.answer_textfile
+        )
+
+        # Audio file path for streaming
+        self.audio_file = None
 
         # FFmpeg process (will be started when streaming begins)
         self.ffmpeg_process = None
@@ -51,7 +58,7 @@ class StreamAdapter:
         Updates the text file atomically so FFmpeg can reload it in real-time.
         """
         self.question_text = text
-        self._write_text_file(self.question_textfile, text)
+        StreamFileManager.write_text_file(self.question_textfile, text)
         print(f"[Stream Overlay] Question: {text}")
 
     def set_answer(self, text: str):
@@ -61,35 +68,28 @@ class StreamAdapter:
         Updates the text file atomically so FFmpeg can reload it in real-time.
         """
         self.answer_text = text
-        self._write_text_file(self.answer_textfile, text)
+        StreamFileManager.write_text_file(self.answer_textfile, text)
         print(f"[Stream Overlay] Answer: {text}")
 
-    def _write_text_file(self, filepath: str, text: str):
+    def set_audio_file(self, filepath: str):
         """
-        Write text to file atomically to avoid partial reads by FFmpeg.
-
-        Uses temp file + rename pattern for atomic file updates.
+        Set the audio file path for streaming.
 
         Args:
-            filepath: Target file path
-            text: Text content to write
+            filepath: Path to WAV audio file to stream
+
+        Note: Audio will be included in the next stream start.
+        For real-time audio updates during streaming, the stream must be restarted.
         """
-        # Write to temporary file first
-        temp_fd, temp_path = tempfile.mkstemp(dir='/tmp', text=True)
-        try:
-            with os.fdopen(temp_fd, 'w', encoding='utf-8') as f:
-                f.write(text)
-            # Atomic rename (POSIX guarantees atomicity)
-            os.rename(temp_path, filepath)
-        except Exception as e:
-            # Clean up temp file if rename fails
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)
-            raise Exception(f"Failed to write text file {filepath}: {e}")
+        if not os.path.exists(filepath):
+            print(f"[StreamAdapter] Warning: Audio file not found: {filepath}")
+
+        self.audio_file = filepath
+        print(f"[StreamAdapter] Audio file set: {filepath}")
 
     def _build_ffmpeg_command(self) -> list[str]:
         """
-        Build FFmpeg command for RTMP streaming with dynamic text overlays.
+        Build FFmpeg command for RTMP streaming with dynamic text overlays and audio.
 
         Returns:
             list[str]: FFmpeg command arguments
@@ -97,36 +97,18 @@ class StreamAdapter:
         Note: This method is extracted for testability. It constructs the command
         but does not execute it.
 
-        Text overlays are dynamically updated using textfile + reload=1 mechanism.
-        FFmpeg reads the text files every frame, enabling real-time text updates.
+        Delegates to FFmpegCommandBuilder for command construction.
         """
-        rtmp_destination = f"{self.rtmp_url}/{self.stream_key}"
+        config = StreamConfig(
+            rtmp_url=self.rtmp_url,
+            stream_key=self.stream_key,
+            background_image=self.background_image,
+            question_textfile=self.question_textfile,
+            answer_textfile=self.answer_textfile,
+            audio_file=self.audio_file
+        )
 
-        # FFmpeg command for streaming with dynamic text overlays
-        ffmpeg_cmd = [
-            'ffmpeg',
-            '-re',  # Read input at native frame rate
-            '-loop', '1',  # Loop the background image
-            '-i', self.background_image,  # Input: background image
-            '-vf', (
-                f"drawtext=textfile={self.question_textfile}:reload=1:"
-                f"fontsize=24:fontcolor=white:x=50:y=50,"
-                f"drawtext=textfile={self.answer_textfile}:reload=1:"
-                f"fontsize=32:fontcolor=yellow:x=50:y=100"
-            ),
-            '-c:v', 'libx264',  # Video codec
-            '-preset', 'veryfast',  # Encoding preset for low latency
-            '-maxrate', '3000k',  # Max bitrate
-            '-bufsize', '6000k',  # Buffer size
-            '-pix_fmt', 'yuv420p',  # Pixel format
-            '-g', '50',  # GOP size
-            '-c:a', 'aac',  # Audio codec (currently no audio input)
-            '-b:a', '128k',  # Audio bitrate
-            '-f', 'flv',  # Output format (RTMP uses FLV)
-            rtmp_destination
-        ]
-
-        return ffmpeg_cmd
+        return FFmpegCommandBuilder.build_rtmp_command(config)
 
     def start_stream(self):
         """

@@ -252,6 +252,78 @@ class TestStreamAdapter:
         assert content2 == "Second"
         assert "First" not in content2
 
+    def test_set_audio_file(self, mock_env, tmp_path):
+        """Test set_audio_file() sets audio file path"""
+        adapter = StreamAdapter()
+
+        # Create temporary audio file
+        audio_file = tmp_path / "test_audio.wav"
+        audio_file.write_text("dummy audio data")
+
+        adapter.set_audio_file(str(audio_file))
+
+        assert adapter.audio_file == str(audio_file)
+
+    def test_set_audio_file_nonexistent(self, mock_env, capsys):
+        """Test set_audio_file() with nonexistent file shows warning"""
+        adapter = StreamAdapter()
+
+        adapter.set_audio_file("/tmp/nonexistent_audio.wav")
+
+        # Verify warning was printed
+        captured = capsys.readouterr()
+        assert "Warning" in captured.out
+        assert "not found" in captured.out
+
+        # Audio file path should still be set (for future use)
+        assert adapter.audio_file == "/tmp/nonexistent_audio.wav"
+
+    def test_ffmpeg_command_with_audio_file(self, mock_env, tmp_path):
+        """Test FFmpeg command includes audio input when audio file is set"""
+        adapter = StreamAdapter()
+
+        # Create temporary audio file
+        audio_file = tmp_path / "test_audio.wav"
+        audio_file.write_text("dummy audio data")
+
+        adapter.set_audio_file(str(audio_file))
+        cmd = adapter._build_ffmpeg_command()
+
+        # Verify audio file is in command
+        assert str(audio_file) in cmd
+        assert '-i' in cmd
+
+    def test_ffmpeg_command_without_audio_file(self, mock_env):
+        """Test FFmpeg command uses anullsrc when no audio file is set"""
+        adapter = StreamAdapter()
+
+        # Do not set audio file
+        cmd = adapter._build_ffmpeg_command()
+
+        # Verify anullsrc is used
+        cmd_str = ' '.join(cmd)
+        assert 'anullsrc' in cmd_str
+        assert 'channel_layout=stereo' in cmd_str
+        assert 'sample_rate=44100' in cmd_str
+
+    def test_ffmpeg_command_audio_encoding_settings(self, mock_env):
+        """Test FFmpeg command has correct audio encoding settings"""
+        adapter = StreamAdapter()
+        cmd = adapter._build_ffmpeg_command()
+
+        # Verify audio codec settings
+        assert 'aac' in cmd  # Audio codec
+        assert '128k' in cmd  # Audio bitrate
+        assert '44100' in cmd  # Audio sample rate
+
+    def test_ffmpeg_command_includes_shortest_flag(self, mock_env):
+        """Test FFmpeg command includes -shortest flag for A/V sync"""
+        adapter = StreamAdapter()
+        cmd = adapter._build_ffmpeg_command()
+
+        # Verify -shortest flag is present
+        assert '-shortest' in cmd
+
 
 if __name__ == "__main__":
     # Allow running tests directly with: python test_stream_adapter.py
