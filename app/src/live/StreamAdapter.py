@@ -63,16 +63,16 @@ class StreamAdapter:
         print(f"[Stream Overlay] Question: {self.question_text}")
         print(f"[Stream Overlay] Answer: {self.answer_text}")
 
-    def start_stream(self):
+    def _build_ffmpeg_command(self) -> list[str]:
         """
-        Start FFmpeg RTMP streaming to YouTube Live.
+        Build FFmpeg command for RTMP streaming.
 
-        Uses a static background with text overlays for question/answer display.
+        Returns:
+            list[str]: FFmpeg command arguments
+
+        Note: This method is extracted for testability. It constructs the command
+        but does not execute it.
         """
-        if self.ffmpeg_process and self.ffmpeg_process.poll() is None:
-            print("[StreamAdapter] Stream already running")
-            return
-
         rtmp_destination = f"{self.rtmp_url}/{self.stream_key}"
 
         # FFmpeg command for streaming
@@ -96,6 +96,20 @@ class StreamAdapter:
             '-f', 'flv',  # Output format (RTMP uses FLV)
             rtmp_destination
         ]
+
+        return ffmpeg_cmd
+
+    def start_stream(self):
+        """
+        Start FFmpeg RTMP streaming to YouTube Live.
+
+        Uses a static background with text overlays for question/answer display.
+        """
+        if self.ffmpeg_process and self.ffmpeg_process.poll() is None:
+            print("[StreamAdapter] Stream already running")
+            return
+
+        ffmpeg_cmd = self._build_ffmpeg_command()
 
         try:
             self.ffmpeg_process = subprocess.Popen(
